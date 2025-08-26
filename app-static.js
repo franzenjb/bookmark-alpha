@@ -57,9 +57,9 @@ function saveBookmark() {
         return;
     }
     
-    // If no image URL provided, try to get favicon or screenshot
+    // If no image URL provided, try to get best possible image
     if (!imageUrl) {
-        imageUrl = getFaviconUrl(url);
+        imageUrl = getBestImageUrl(url, title) || getFaviconUrl(url);
     }
     
     const bookmark = {
@@ -108,7 +108,81 @@ function toggleFavorite(id) {
     }
 }
 
-// Get favicon URL from a website URL
+// Get best possible image for a URL
+function getBestImageUrl(url, title) {
+    try {
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname;
+        
+        // YouTube video thumbnail
+        if (domain.includes('youtube.com') || domain.includes('youtu.be')) {
+            let videoId = null;
+            
+            // Extract video ID from various YouTube URL formats
+            if (domain.includes('youtube.com')) {
+                const params = new URLSearchParams(urlObj.search);
+                videoId = params.get('v');
+            } else if (domain.includes('youtu.be')) {
+                videoId = urlObj.pathname.slice(1);
+            }
+            
+            if (videoId) {
+                // Return high quality YouTube thumbnail
+                return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            }
+        }
+        
+        // Twitter/X images
+        if (domain.includes('twitter.com') || domain.includes('x.com')) {
+            // Twitter card image (would need API or proxy to fetch actual image)
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+        }
+        
+        // GitHub repository social preview
+        if (domain.includes('github.com')) {
+            const pathParts = urlObj.pathname.split('/').filter(p => p);
+            if (pathParts.length >= 2) {
+                const owner = pathParts[0];
+                const repo = pathParts[1];
+                // GitHub social preview image
+                return `https://opengraph.githubassets.com/1/${owner}/${repo}`;
+            }
+        }
+        
+        // Medium articles
+        if (domain.includes('medium.com')) {
+            // Medium typically has good meta images but we'd need to fetch them
+            return `https://miro.medium.com/max/1200/1*mk1-6aYaf_Bes1E3Imhc0A.jpeg`;
+        }
+        
+        // Reddit posts
+        if (domain.includes('reddit.com')) {
+            return `https://www.redditstatic.com/desktop2x/img/renderTimingPixel.png`;
+        }
+        
+        // News sites - try to use Open Graph image API service
+        if (domain.includes('nytimes.com') || domain.includes('bbc.com') || 
+            domain.includes('cnn.com') || domain.includes('reuters.com')) {
+            // Use a screenshot service as fallback
+            return `https://image.thum.io/get/width/1200/crop/630/https://${domain}`;
+        }
+        
+        // For other sites, try to use a screenshot service
+        // Note: These services may have rate limits or require API keys
+        return `https://api.screenshotmachine.com?key=free&url=${encodeURIComponent(url)}&dimension=1024x768`;
+        
+    } catch {
+        // Fallback to large favicon
+        try {
+            const domain = new URL(url).hostname;
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+        } catch {
+            return '';
+        }
+    }
+}
+
+// Get favicon URL from a website URL (fallback)
 function getFaviconUrl(url) {
     try {
         const domain = new URL(url).hostname;
@@ -288,7 +362,7 @@ function handleImport(event) {
                     url,
                     category: 'Imported',
                     description: '',
-                    imageUrl: getFaviconUrl(url),
+                    imageUrl: getBestImageUrl(url, title) || getFaviconUrl(url),
                     favorite: false,
                     dateAdded: new Date().toISOString()
                 };
