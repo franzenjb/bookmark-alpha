@@ -167,9 +167,19 @@ function getBestImageUrl(url, title) {
             return `https://image.thum.io/get/width/1200/crop/630/https://${domain}`;
         }
         
-        // For other sites, try to use a screenshot service
-        // Note: These services may have rate limits or require API keys
-        return `https://api.screenshotmachine.com?key=free&url=${encodeURIComponent(url)}&dimension=1024x768`;
+        // For other sites, try multiple screenshot services as fallback
+        // Using shot.screenshotapi.net which provides free screenshots
+        const encodedUrl = encodeURIComponent(url);
+        
+        // Try different free screenshot services
+        const screenshotServices = [
+            `https://shot.screenshotapi.net/screenshot?url=${encodedUrl}&width=1280&height=720&output=image&file_type=png&wait_for_event=load`,
+            `https://api.apiflash.com/v1/urltoimage?access_key=free&url=${encodedUrl}&width=1280&height=720&format=png&wait_until=page_loaded`,
+            `https://image.thum.io/get/width/1280/crop/720/${url}`
+        ];
+        
+        // Return the first service (most reliable)
+        return screenshotServices[0];
         
     } catch {
         // Fallback to large favicon
@@ -429,6 +439,16 @@ if (localStorage.getItem('bookmarkAlpha') === null) {
     bookmarks = [
         {
             id: '1',
+            title: 'JavaScript in 100 Seconds',
+            url: 'https://www.youtube.com/watch?v=DHjqpvDnNGE',
+            category: 'Learning',
+            description: 'JavaScript is the the programming language that built the web. Learn the basics of JavaScript in 100 seconds.',
+            imageUrl: 'https://img.youtube.com/vi/DHjqpvDnNGE/maxresdefault.jpg',
+            favorite: true,
+            dateAdded: new Date().toISOString()
+        },
+        {
+            id: '2',
             title: 'GitHub - World\'s Leading Software Development Platform',
             url: 'https://github.com',
             category: 'Development',
@@ -438,23 +458,33 @@ if (localStorage.getItem('bookmarkAlpha') === null) {
             dateAdded: new Date().toISOString()
         },
         {
-            id: '2',
-            title: 'Stack Overflow - Where Developers Learn & Share',
-            url: 'https://stackoverflow.com',
-            category: 'Development',
-            description: 'The largest online community for developers',
-            imageUrl: 'https://cdn.sstatic.net/Sites/stackoverflow/Img/apple-touch-icon@2.png',
-            favorite: true,
+            id: '3',
+            title: 'React Tutorial for Beginners',
+            url: 'https://www.youtube.com/watch?v=SqcY0GlETPk',
+            category: 'Learning',
+            description: 'React tutorial for beginners - Learn React in 1 hour',
+            imageUrl: 'https://img.youtube.com/vi/SqcY0GlETPk/maxresdefault.jpg',
+            favorite: false,
             dateAdded: new Date().toISOString()
         },
         {
-            id: '3',
+            id: '4',
             title: 'MDN Web Docs',
             url: 'https://developer.mozilla.org',
             category: 'Documentation',
             description: 'Resources for developers, by developers',
-            imageUrl: 'https://developer.mozilla.org/apple-touch-icon.png',
+            imageUrl: 'https://developer.mozilla.org/mdn-social-share.png',
             favorite: false,
+            dateAdded: new Date().toISOString()
+        },
+        {
+            id: '5',
+            title: 'The Coding Train',
+            url: 'https://www.youtube.com/watch?v=HerCR8bw_GE',
+            category: 'Learning',
+            description: 'Creative coding video tutorials',
+            imageUrl: 'https://img.youtube.com/vi/HerCR8bw_GE/maxresdefault.jpg',
+            favorite: true,
             dateAdded: new Date().toISOString()
         }
     ];
